@@ -1,107 +1,66 @@
-# ros2-controller-sample-python
-> ⚠️ **주의: 이 노드는 반드시 ROS2 Humble에서만 테스트되었습니다.**  
-> ⚠️ **주의: 이 프로젝트는 리눅스 환경에서만 테스트 되었습니다.**  
-> ⚠️ **주의: 이 README.md에서 ros2 설치 방법은 나오지 않습니다.**
+# ROS2 Web Controller (rclnodejs)
+> ⚠️ **주의사항**
+> - ROS2 Humble에서만 테스트되었습니다
+> - Linux 환경에서만 테스트되었습니다
+> - ROS2가 사전에 설치되어 있어야 합니다
 
-## 1. ros2 초기 설정
+## 📋 프로젝트 구조
 
-## 2. ros2 빌드
-
-### 1. 터미널 열기
-
-### 2. 빌드 명령어 입력
-```bash
-cd ros2-controller-sample-cpp # 디렉토리 이동
-colcon build # 패키지 빌드
+```
+ubisam_ros2_py/
+├── src/
+│   ├── test_interfaces/          # 커스텀 인터페이스 정의
+│   │   ├── msg/Position.msg
+│   │   ├── srv/CalculateDistance.srv
+│   │   └── action/MoveTo.action
+│   └── test_nodes_py/             # ROS2 Python 노드
+│       ├── node_a.py              # Action/Service Client
+│       └── node_b.py              # Action/Service Server
+├── server.js                      # Node.js 웹서버 (rclnodejs)
+├── web_client_rclnodejs.html      # 웹 클라이언트
+└── package.json                   # Node.js 의존성
 ```
 
-### 3. 노드 실행 및 테스트
+## 🚀 빠른 시작
+
+### 1. ROS2 패키지 빌드
 
 ```bash
-# 첫번째 터미널 ( NodeA, NodeB 실행 )
 cd ubisam_ros2_py
-source install/setup.bash # 환경 설정
+colcon build
+source install/setup.bash
+```
+
+### 2. ROS2 노드 실행
+
+```bash
+# 터미널 1: NodeA와 NodeB 실행
+source install/setup.bash
 ros2 launch test_nodes_py nodes.launch.py
 ```
 
-```bash
-# 두번째 터미널 ( Ros2 WebSocket 서버 실행 )
-cd ubisam_ros2_py
-sudo apt update
-sudo apt install ros-humble-rosbridge-suite # 패키지 설치 
-source install/setup.bash
-ros2 launch rosbridge_server  rosbridge_websocket_launch.xml # 서버 실행
-```
-
-## 3. 웹 브라우저에서 확인
-
-### 방식 1: rosbridge 사용 (기본)
+### 3. Node.js 웹 서버 실행
 
 ```bash
-# 두번째 터미널 ( Ros2 WebSocket 서버 실행 )
+# 터미널 2: 웹 서버 실행
 cd ubisam_ros2_py
-sudo apt update
-sudo apt install ros-humble-rosbridge-suite # 패키지 설치
-source install/setup.bash
-ros2 launch rosbridge_server rosbridge_websocket_launch.xml # 서버 실행
-```
-
-```bash
-# 세번째 터미널 ( HTTP 서버 실행 )
-cd ubisam_ros2_py
-python3 -m http.server 8000
-```
-
-**브라우저 접속:**
-```
-http://192.168.189.132:8000/web_client.html
-```
-
-**지원 기능:**
-- ✅ Topic (완전 지원)
-- ✅ Service (완전 지원)
-- ⚠️ Action (제한적 - 저수준 API 사용)
-
----
-
-### 방식 2: rclnodejs 사용 (권장) ⭐
-
-**장점:**
-- ✅ Action 완벽 지원
-- ✅ 더 빠른 성능
-- ✅ rosbridge 불필요
-- ✅ 단일 서버 프로세스
-
-```bash
-# 두번째 터미널 ( Node.js 서버 실행 )
-cd ubisam_ros2_py
+source install/setup.bash  # 중요!
 
 # 최초 1회만 실행
 npm install --force
+npx generate-ros-messages
 
 # 서버 실행
-source install/setup.bash  # 중요!
 node server.js
 ```
 
-**브라우저 접속:**
+### 4. 브라우저 접속
+
 ```
 http://localhost:8080
-또는
-http://192.168.189.132:8080
 ```
 
-**지원 기능:**
-- ✅ Topic (완전 지원)
-- ✅ Service (완전 지원)
-- ✅ Action (완전 지원 - 네이티브 API)
-
-**개발 모드 (자동 재시작):**
-```bash
-npm run dev
+외부 PC에서 접속:
 ```
-
-**트러블슈팅:**
-- rclnodejs 설치 실패 시: `sudo apt install python3-dev`
-- 서버가 ROS2 노드를 찾지 못할 시: `source install/setup.bash` 후 실행
-
+http://<서버IP>:8080
+```

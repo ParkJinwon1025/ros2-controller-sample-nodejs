@@ -25,7 +25,7 @@ app.use(express.static(__dirname));
 
 // Main page
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'web_client_rclnodejs.html'));
+  res.sendFile(path.join(__dirname, 'web_client.html'));
 });
 
 // Initialize ROS2
