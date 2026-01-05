@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>ROS2 Web Monitor (rclnodejs)</title>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js"></script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { color: white; text-align: center; margin-bottom: 20px; }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .connected { background: #d4edda; color: #155724; }
+        .disconnected { background: #f8d7da; color: #721c24; }
+
+        .json-container {
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .json-header {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            font-weight: bold;
+        }
+        .json-display {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 3px;
+        }
+        button:hover { background: #5568d3; }
+        button.cancel { background: #dc3545; }
+        button.cancel:hover { background: #c82333; }
+
+        input {
+            padding: 6px;
+            margin: 3px;
+            width: 80px;
+        }
+
+        .message-log {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .message {
+            background: #f0f0f0;
+            margin: 4px 0;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .topic { border-left: 4px solid #28a745; }
+        .service { border-left: 4px solid #ffc107; }
+        .action { border-left: 4px solid #007bff; }
+
+        .time { color: #777; font-size: 0.85em; }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h1>📡 ROS2 Web Monitor (rclnodejs)</h1>
+
+    <div class="section">
+        <div id="status" class="status disconnected">Connecting...</div>
+    </div>
+
+    <!-- ================= Topic ================= -->
+    <div class="section">
+        <h2>📍 Topic : /position_topic</h2>
+
+        <input id="pub_x" type="number" step="0.1" value="5">
+        <input id="pub_y" type="number" step="0.1" value="3">
+        <input id="pub_z" type="number" step="0.1" value="2">
+        <input id="pub_angle" type="number" step="0.1" value="45">
+        <button onclick="publishPosition()">Publish</button>
+
+        <div class="json-container">
+            <div class="json-header">📤 Sent JSON</div>
+            <div id="topic-sent" class="json-display">대기 중...</div>
+        </div>
+
+        <div class="json-container">
+            <div class="json-header">📥 Received JSON</div>
+            <div id="topic-received" class="json-display">대기 중...</div>
+        </div>
+
+        <div id="topic-log" class="message-log"></div>
+    </div>
+
+    <!-- ================= Service ================= -->
+    <div class="section">
+        <h2>📞 Service : /calculate_distance</h2>
+
+        <input id="x1" type="number" value="0">
+        <input id="y1" type="number" value="0">
+        <input id="z1" type="number" value="0">
+
+        <input id="x2" type="number" value="10">
+        <input id="y2" type="number" value="10">
+        <input id="z2" type="number" value="5">
+
+        <button onclick="callService()">Calculate</button>
+
+        <div class="json-container">
+            <div class="json-header">📥 Response JSON</div>
+            <div id="service-response" class="json-display">대기 중...</div>
+        </div>
+
+        <div id="service-log" class="message-log"></div>
+    </div>
+
+    <!-- ================= Action ================= -->
+    <div class="section">
+        <h2>🎯 Action : /move_to_action</h2>
+
+        <input id="target_x" type="number" step="0.1" value="10">
+        <input id="target_y" type="number" step="0.1" value="5">
+        <input id="target_z" type="number" step="0.1" value="2">
+        <input id="target_angle" type="number" step="0.1" value="90">
+        <button onclick="sendActionGoal()">Send Goal</button>
+        <button class="cancel" onclick="cancelActionGoal()">Cancel</button>
+
+        <div class="json-container">
+            <div class="json-header">🎯 Goal JSON</div>
+            <div id="action-goal" class="json-display">대기 중...</div>
+        </div>
+
+        <div class="json-container">
+            <div class="json-header">📊 Feedback JSON (Real-time)</div>
+            <div id="action-feedback" class="json-display">대기 중...</div>
+        </div>
+
+        <div class="json-container">
+            <div class="json-header">✅ Result JSON</div>
+            <div id="action-result" class="json-display">대기 중...</div>
+        </div>
+
+        <div id="action-log" class="message-log"></div>
+    </div>
+</div>
+
+<script>
+/* ================= Socket.io 연결 ================= */
+// Use current hostname (works for both localhost and external access)
+const socket = io(`http://${window.location.hostname}:8080`);
+
+/* ================= 유틸 ================= */
+function pretty(obj) {
+    return JSON.stringify(obj, null, 2);
+}
+
+function addLog(containerId, text, type) {
+    const div = document.createElement('div');
+    div.className = `message ${type}`;
+    div.innerHTML = `<span class="time">[${new Date().toLocaleTimeString()}]</span> ${text}`;
+    document.getElementById(containerId).prepend(div);
+}
+
+/* ================= Socket.io Events ================= */
+socket.on('connect', () => {
+    document.getElementById('status').textContent = '✅ Connected';
+    document.getElementById('status').className = 'status connected';
+});
+
+socket.on('disconnect', () => {
+    document.getElementById('status').textContent = '❌ Disconnected';
+    document.getElementById('status').className = 'status disconnected';
+});
+
+socket.on('ros_status', (status) => {
+    console.log('ROS Status:', status);
+});
+
+/* ================= Topic ================= */
+function publishPosition() {
+    const data = {
+        x: Number(pub_x.value),
+        y: Number(pub_y.value),
+        z: Number(pub_z.value),
+        angle: Number(pub_angle.value)
+    };
+
+    socket.emit('publish_position', data);
+    addLog('topic-log', 'Published message', 'topic');
+}
+
+socket.on('topic_sent', (msg) => {
+    document.getElementById('topic-sent').textContent = pretty(msg);
+});
+
+socket.on('topic_received', (msg) => {
+    document.getElementById('topic-received').textContent = pretty(msg);
+    addLog('topic-log', `Received x=${msg.x}, y=${msg.y}`, 'topic');
+});
+
+socket.on('topic_error', (error) => {
+    addLog('topic-log', `❌ Error: ${error}`, 'topic');
+    console.error('Topic error:', error);
+});
+
+/* ================= Service ================= */
+function callService() {
+    const data = {
+        x1: Number(x1.value), y1: Number(y1.value), z1: Number(z1.value),
+        x2: Number(x2.value), y2: Number(y2.value), z2: Number(z2.value)
+    };
+
+    socket.emit('call_service', data);
+    addLog('service-log', 'Calling service...', 'service');
+}
+
+socket.on('service_response', (response) => {
+    document.getElementById('service-response').textContent = pretty(response);
+    addLog('service-log', `Distance = ${response.distance}`, 'service');
+});
+
+socket.on('service_error', (error) => {
+    addLog('service-log', `Error: ${error}`, 'service');
+});
+
+/* ================= Action ================= */
+function sendActionGoal() {
+    const data = {
+        target_x: Number(target_x.value),
+        target_y: Number(target_y.value),
+        target_z: Number(target_z.value),
+        target_angle: Number(target_angle.value)
+    };
+
+    document.getElementById('action-goal').textContent = pretty(data);
+    document.getElementById('action-feedback').textContent = '대기 중...';
+    document.getElementById('action-result').textContent = '대기 중...';
+
+    socket.emit('send_action_goal', data);
+}
+
+function cancelActionGoal() {
+    socket.emit('cancel_action_goal');
+}
+
+socket.on('action_status', (status) => {
+    addLog('action-log', status, 'action');
+});
+
+socket.on('action_feedback', (feedback) => {
+    document.getElementById('action-feedback').textContent = pretty(feedback);
+    addLog('action-log', `Progress: ${feedback.progress_percent.toFixed(1)}%`, 'action');
+});
+
+socket.on('action_result', (result) => {
+    document.getElementById('action-result').textContent = pretty(result);
+    addLog('action-log', `Result: ${result.status}`, 'action');
+});
+
+socket.on('action_error', (error) => {
+    addLog('action-log', `Error: ${error}`, 'action');
+});
+</script>
+</body>
+</html>

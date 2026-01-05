@@ -1,0 +1,18 @@
+{
+  "name": "ros2-web-server",
+  "version": "1.0.0",
+  "description": "ROS2 Web Server using rclnodejs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "rclnodejs": "^0.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
