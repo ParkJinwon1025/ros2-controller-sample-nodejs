@@ -17,3 +17,5 @@ package-lock.json
 
 # OS
 .DS_Store
+
+.claude/

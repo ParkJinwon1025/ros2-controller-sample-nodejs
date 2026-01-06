@@ -86,8 +86,8 @@ function setupTopics() {
         console.log('📤 Publishing topic:', msg);
         positionPublisher.publish(msg);
 
-        // Send back to client (convert timestamp for JSON)
-        socket.emit('topic_sent', {
+        // ✅ 변경: 모든 클라이언트에게 브로드캐스트
+        io.emit('topic_sent', {
           ...msg,
           timestamp: msg.timestamp.toString()
         });
@@ -96,7 +96,7 @@ function setupTopics() {
       } catch (error) {
         console.error('❌ Topic publish failed:', error);
         console.error('Error stack:', error.stack);
-        socket.emit('topic_error', error.message);
+        io.emit('topic_error', error.message);  // ✅ 브로드캐스트
       }
     });
   });
@@ -119,7 +119,6 @@ function setupServices() {
         console.log('📞 Service request received:', data);
 
         // Create proper request object using generated class
-        // Pass object to constructor - it will be auto-frozen
         const requestData = {
           x1: Number(data.x1),
           y1: Number(data.y1),
@@ -136,7 +135,7 @@ function setupServices() {
         if (!serviceClient.waitForService(1000)) {
           const errorMsg = 'Service not available';
           console.error('❌ Service error:', errorMsg);
-          socket.emit('service_error', errorMsg);
+          io.emit('service_error', errorMsg);
           return;
         }
 
@@ -157,13 +156,13 @@ function setupServices() {
 
         console.log('✅ Service response:', response);
 
-        // Response is already a plain object
-        socket.emit('service_response', response);
+        // ✅ 모든 클라이언트에게 브로드캐스트
+        io.emit('service_response', response);
 
       } catch (error) {
         console.error('❌ Service call failed:', error);
         console.error('Error stack:', error.stack);
-        socket.emit('service_error', error.message);
+        io.emit('service_error', error.message);
       }
     });
   });
@@ -192,7 +191,10 @@ function setupActions() {
         };
 
         console.log('📤 Sending action goal:', goal);
-        socket.emit('action_status', 'Sending goal...');
+        
+        // ✅ Goal을 모든 클라이언트에게 브로드캐스트
+        io.emit('action_goal', goal);
+        io.emit('action_status', 'Sending goal...');
 
         // Send goal with feedback callback
         const goalHandle = await actionClient.sendGoal(
@@ -200,39 +202,37 @@ function setupActions() {
           (feedback) => {
             // Feedback callback
             console.log('📊 Feedback received:', feedback);
-            socket.emit('action_feedback', feedback);
+            io.emit('action_feedback', feedback);
           }
         );
 
         if (!goalHandle.accepted) {
           const errorMsg = 'Goal rejected';
           console.error('❌ Action goal rejected');
-          socket.emit('action_error', errorMsg);
+          io.emit('action_error', errorMsg);
           return;
         }
 
-        socket.emit('action_status', 'Goal accepted!');
+        io.emit('action_status', 'Goal accepted!');
         console.log('✅ Goal accepted, waiting for result...');
 
         // Wait for result
         const result = await goalHandle.getResult();
         console.log('✅ Action result received:', result);
-        socket.emit('action_result', result);
+        io.emit('action_result', result);
 
       } catch (error) {
         console.error('❌ Action goal failed:', error);
         console.error('Error stack:', error.stack);
-        socket.emit('action_error', error.message);
+        io.emit('action_error', error.message);
       }
     });
 
     socket.on('cancel_action_goal', async () => {
       try {
-        // Cancel is handled automatically when client disconnects
-        // or you can implement custom cancellation logic
-        socket.emit('action_status', 'Cancel requested');
+        io.emit('action_status', 'Cancel requested');
       } catch (error) {
-        socket.emit('action_error', error.message);
+        io.emit('action_error', error.message);
       }
     });
   });

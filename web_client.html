@@ -267,7 +267,6 @@ function sendActionGoal() {
         target_angle: Number(target_angle.value)
     };
 
-    document.getElementById('action-goal').textContent = pretty(data);
     document.getElementById('action-feedback').textContent = '대기 중...';
     document.getElementById('action-result').textContent = '대기 중...';
 
@@ -277,6 +276,12 @@ function sendActionGoal() {
 function cancelActionGoal() {
     socket.emit('cancel_action_goal');
 }
+
+// ✅ Action Goal 받기 (서버에서 브로드캐스트)
+socket.on('action_goal', (goal) => {
+    document.getElementById('action-goal').textContent = pretty(goal);
+    addLog('action-log', `Goal sent: x=${goal.target_x}, y=${goal.target_y}`, 'action');
+});
 
 socket.on('action_status', (status) => {
     addLog('action-log', status, 'action');

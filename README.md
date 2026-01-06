@@ -13,7 +13,7 @@ ubisam_ros2_py/
 │   │   ├── msg/Position.msg
 │   │   ├── srv/CalculateDistance.srv
 │   │   └── action/MoveTo.action
-│   └── test_nodes_py/             # ROS2 Python 노드
+│   └── test_nodes_py/             # ROS2 Python 노드 
 │       ├── node_a.py              # Action/Service Client
 │       └── node_b.py              # Action/Service Server
 ├── server.js                      # Node.js 웹서버 (rclnodejs)
@@ -35,6 +35,7 @@ source install/setup.bash
 
 ```bash
 # 터미널 1: NodeA와 NodeB 실행
+cd ubisam_ros2_py
 source install/setup.bash
 ros2 launch test_nodes_py nodes.launch.py
 ```
@@ -56,11 +57,4 @@ node server.js
 
 ### 4. 브라우저 접속
 
-```
-http://localhost:8080
-```
-
-외부 PC에서 접속:
-```
-http://<서버IP>:8080
-```
+```http://192.168.189.132:8080```
