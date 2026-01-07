@@ -34,8 +34,7 @@ class NodeA(Node):
         self.t = 0.0
         
         self.get_logger().info('Node A started (manual mode)')
-    
-    # 여기서부터 함수들이 __init__ 밖!
+
     def publish_position(self):
         self.x = 5.0 * math.cos(self.t)
         self.y = 5.0 * math.sin(self.t)
