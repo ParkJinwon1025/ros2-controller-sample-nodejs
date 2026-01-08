@@ -1,0 +1,12 @@
+# ROS2 build artifacts (should NOT be here)
+build/
+install/
+log/
+
+# Node.js
+node_modules/
+package-lock.json
+*.log
+
+# Generated ROS2 messages
+node_modules/rclnodejs/generated/
