@@ -198,17 +198,19 @@ function addLog(containerId, text, type) {
 
 /* ================= Socket.io Events ================= */
 socket.on('connect', () => {
+    console.log('✅ Socket.io Connected');
     document.getElementById('status').textContent = '✅ Connected';
     document.getElementById('status').className = 'status connected';
 });
 
 socket.on('disconnect', () => {
+    console.log('❌ Socket.io Disconnected');
     document.getElementById('status').textContent = '❌ Disconnected';
     document.getElementById('status').className = 'status disconnected';
 });
 
 socket.on('ros_status', (status) => {
-    console.log('ROS Status:', status);
+    console.log('📡 ROS Status:', status);
 });
 
 /* ================= Topic ================= */
@@ -220,22 +222,28 @@ function publishPosition() {
         angle: Number(pub_angle.value)
     };
 
+    console.log('📤 [TOPIC] Publishing position:');
+    console.log(JSON.stringify(data, null, 2));
     socket.emit('publish_position', data);
     addLog('topic-log', 'Published message', 'topic');
 }
 
 socket.on('topic_sent', (msg) => {
+    console.log('📤 [TOPIC] Sent to ROS2:');
+    console.log(JSON.stringify(msg, null, 2));
     document.getElementById('topic-sent').textContent = pretty(msg);
 });
 
 socket.on('topic_received', (msg) => {
+    console.log('📥 [TOPIC] Received from ROS2:');
+    console.log(JSON.stringify(msg, null, 2));
     document.getElementById('topic-received').textContent = pretty(msg);
     addLog('topic-log', `Received x=${msg.x}, y=${msg.y}`, 'topic');
 });
 
 socket.on('topic_error', (error) => {
+    console.error('❌ [TOPIC] Error:', error);
     addLog('topic-log', `❌ Error: ${error}`, 'topic');
-    console.error('Topic error:', error);
 });
 
 /* ================= Service ================= */
@@ -245,16 +253,21 @@ function callService() {
         x2: Number(x2.value), y2: Number(y2.value), z2: Number(z2.value)
     };
 
+    console.log('📞 [SERVICE] Calling service with data:');
+    console.log(JSON.stringify(data, null, 2));
     socket.emit('call_service', data);
     addLog('service-log', 'Calling service...', 'service');
 }
 
 socket.on('service_response', (response) => {
+    console.log('📥 [SERVICE] Response received:');
+    console.log(JSON.stringify(response, null, 2));
     document.getElementById('service-response').textContent = pretty(response);
     addLog('service-log', `Distance = ${response.distance}`, 'service');
 });
 
 socket.on('service_error', (error) => {
+    console.error('❌ [SERVICE] Error:', error);
     addLog('service-log', `Error: ${error}`, 'service');
 });
 
@@ -267,6 +280,8 @@ function sendActionGoal() {
         target_angle: Number(target_angle.value)
     };
 
+    console.log('🎯 [ACTION] Sending goal:');
+    console.log(JSON.stringify(data, null, 2));
     document.getElementById('action-feedback').textContent = '대기 중...';
     document.getElementById('action-result').textContent = '대기 중...';
 
@@ -274,30 +289,39 @@ function sendActionGoal() {
 }
 
 function cancelActionGoal() {
+    console.log('🛑 [ACTION] Canceling goal');
     socket.emit('cancel_action_goal');
 }
 
 // ✅ Action Goal 받기 (서버에서 브로드캐스트)
 socket.on('action_goal', (goal) => {
+    console.log('🎯 [ACTION] Goal confirmed:');
+    console.log(JSON.stringify(goal, null, 2));
     document.getElementById('action-goal').textContent = pretty(goal);
     addLog('action-log', `Goal sent: x=${goal.target_x}, y=${goal.target_y}`, 'action');
 });
 
 socket.on('action_status', (status) => {
+    console.log('📊 [ACTION] Status:', status);
     addLog('action-log', status, 'action');
 });
 
 socket.on('action_feedback', (feedback) => {
+    console.log('📊 [ACTION] Feedback:');
+    console.log(JSON.stringify(feedback, null, 2));
     document.getElementById('action-feedback').textContent = pretty(feedback);
     addLog('action-log', `Progress: ${feedback.progress_percent.toFixed(1)}%`, 'action');
 });
 
 socket.on('action_result', (result) => {
+    console.log('✅ [ACTION] Result:');
+    console.log(JSON.stringify(result, null, 2));
     document.getElementById('action-result').textContent = pretty(result);
     addLog('action-log', `Result: ${result.status}`, 'action');
 });
 
 socket.on('action_error', (error) => {
+    console.error('❌ [ACTION] Error:', error);
     addLog('action-log', `Error: ${error}`, 'action');
 });
 </script>
